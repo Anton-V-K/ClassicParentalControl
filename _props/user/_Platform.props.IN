@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<!-- NOTE: You can copy this file to _Platform.props to override some standard settings -->
+<!-- NOTE: Don't add the copy _Platform.props to source control!!! -->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\auto\LatestTargetPlatformVersion.props" />
+  <PropertyGroup Label="Globals">
+    <WindowsTargetPlatformVersion>$(LatestTargetPlatformVersion)</WindowsTargetPlatformVersion>
+<!--
+    <TargetPlatformVersion>
+        $(WindowsTargetPlatformVersion)
+    </TargetPlatformVersion>
+-->
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <PlatformToolset>v140</PlatformToolset> <!-- VS2015 -->
+  </PropertyGroup>
+</Project>

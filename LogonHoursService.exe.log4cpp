@@ -1,0 +1,5 @@
+# log4cpp.properties
+# Put this file into the same dir where EXE resides
+
+# By default Release build show INFO and more important levels
+log4cpp.rootCategory=DEBUG
