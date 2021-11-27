@@ -30,4 +30,4 @@ This project is intended to be useful in Windows 10, where you cannot easily est
 Though the built-in classic parental control is available in Windows 7/8.1, you still can make use of this project.
 
 **(!)** For Windows 7/8.1 you may need to install [KB2999226](https://support.microsoft.com/en-us/help/2999226/update-for-universal-c-runtime-in-windows), if the system complains about missing `api-ms-win-crt-runtime-l1-1-0.dll`:
-![](doc\Windows8.1-api-ms-win-crt-runtime-l1-1-0.dll_is_missing.png)
+![The program can't start because api-ms-win-crt-runtime-l1-1-0.dll is missing from your computer](doc/Windows8.1-api-ms-win-crt-runtime-l1-1-0.dll_is_missing.png)
