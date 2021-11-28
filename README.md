@@ -1,11 +1,20 @@
 [![MSBuild](https://github.com/Anton-V-K/ClassicParentalControl/actions/workflows/msbuild.yml/badge.svg)](actions/workflows/msbuild.yml)
 # Classic Parental Control (for Windows)
 
-The project provides utilities which allow you to establish/maintain Parental Control for Local Accounts in Windows 10.
-- `LogonHoursService` monitors allowed logon hours (which you typically can set with a command like `net user USERNAME /time:M-F,10-18`) and locks the session once the time is over
+The project provides utility which allows you to establish/maintain Parental Control for Local Accounts in Windows 10.
+- `LogonHoursService` monitors allowed logon hours (which you can set with a command like `net user USERNAME /time:M-F,10-18`) and locks the session once the time is over
 
 ## Compilation
 You need VS2019 with vc142 toolkit to build the solution.
+
+The project can also be built with older versions of VS after tuning the properties:
+
+1. Copy `_props\user\_Platform.props.IN` to `_props\user\_Platform.props`
+2. Adjust `PlatformToolset` to specify available/desired toolset:  
+     <PropertyGroup Label="Configuration">  
+       <PlatformToolset>v141</PlatformToolset> <!-- VS2017 -->  
+     </PropertyGroup>
+3. Make a symbolic link (or just make a copy) `packages\log4cpp.1.1.3.1\lib\native\v141` as a duplicate of `log4cpp.1.1.3.1\lib\native\v142`
 
 ## Installation
 1. Copy all binaries from the archive into a directory with read-only access to Everyone, so only Administrators can remove or update them (if needed).
