@@ -86,7 +86,7 @@ BEGIN
             VALUE "FileDescription", SERVICE_DESC
             VALUE "FileVersion", VERSION_STRING
             VALUE "InternalName", SERVICE_NAME ".exe"
-            VALUE "LegalCopyright", "Copyright (C) 2021 Anton-V-K"
+            VALUE "LegalCopyright", "Copyright (C) 2021 Anton-V-K (https://github.com/Anton-V-K)"
             VALUE "OriginalFilename", SERVICE_NAME ".exe"
             VALUE "ProductName", SERVICE_FULL_NAME
             VALUE "ProductVersion", VERSION_STRING

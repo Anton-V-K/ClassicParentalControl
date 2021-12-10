@@ -40,3 +40,9 @@ Though the built-in classic parental control is available in Windows 7/8.1, you 
 
 **(!)** For Windows 7/8.1 you may need to install [KB2999226](https://support.microsoft.com/en-us/help/2999226/update-for-universal-c-runtime-in-windows), if the system complains about missing `api-ms-win-crt-runtime-l1-1-0.dll`:  
 ![The program can't start because api-ms-win-crt-runtime-l1-1-0.dll is missing from your computer](doc/Windows8.1-api-ms-win-crt-runtime-l1-1-0.dll_is_missing.png)
+
+## History
+
+### 1.0.1 Alpha (10.12.2021)
+
+- [x] Fixed calculation of remaining seconds for a session
