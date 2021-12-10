@@ -13,7 +13,20 @@ WorkerData              g_WorkerData;
 enum EDayOfWeek
 {
     Sun, Mon, Tue, Wed, Thu, Fri, Sat,
+    FIRST = Sun,
+    LAST = Sat,
 };
+EDayOfWeek& operator ++(EDayOfWeek& day)
+{
+    if (day < EDayOfWeek::LAST)
+    {
+        int value = static_cast<int>(day);
+        day = static_cast<EDayOfWeek>(++value);
+        return day;
+    }
+    LOG_ERROR(__func__) << "Cannot increment " << int(day);
+    return day;
+}
 
 class LogonHours
 {
@@ -63,7 +76,24 @@ public:
         if (!Allowed(day, hour))
             return 0;
         long left = (60 - second - 1) + 60 * (60 - minute - 1); // the rest of current hour is allowed
-        // TODO other hours/days
+        WORD hour_start = hour + 1;                     // for the current day - start with the next hour
+        EDayOfWeek d    = day;
+        for (int i = 0; i < 7; ++i)                     // we'll check all week days starting from the current one
+        {
+            for (WORD h = hour_start; h < 24; ++h)      // check hours until end of day
+            {
+                if (Allowed(day, h))
+                    left += 3600;
+                else
+                    return left;
+            }
+            hour_start = 0;                             // for the rest of days
+            // next day
+            if (d == EDayOfWeek::LAST)
+                d = EDayOfWeek::FIRST;
+            else
+                ++d;
+        }
         return left;
     }
 
@@ -71,6 +101,21 @@ private:
     bool m_all;             // true if no logon restrictions
     bool m_data[7][24];
 };
+
+void seconds2time(long seconds, long* days, WORD* hours, WORD* mins, WORD* secs)
+{
+    if (days)
+        *days = seconds / (24 * 3600);
+    seconds %= (24 * 3600);
+    if (hours)
+        *hours = WORD(seconds / 3600);
+    seconds %= 3600;
+    if (mins)
+        *mins = WORD(seconds / 60);
+    seconds %= 60;
+    if (secs)
+        *secs = WORD(seconds);
+}
 
 WorkerData::WorkerData()
 {
@@ -175,6 +220,17 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
                         SYSTEMTIME systime; GetSystemTime(&systime); // UTC/GMT
 
                         const auto seconds_left = hours.SecondsLeft(EDayOfWeek(systime.wDayOfWeek), systime.wHour, systime.wMinute, systime.wSecond);
+                        if (seconds_left >= 0)
+                        {
+                            long days;
+                            WORD hours, minutes, seconds;
+                            seconds2time(seconds_left, &days, &hours, &minutes, &seconds);
+                            LOG_DEBUG(__func__)
+                                << days << "d:"
+                                // TODO leading zeros
+                                << hours << ":" << minutes << ":" << seconds
+                                << " (" << seconds_left << " seconds) left for session " << session.id << " '" << username << "'";
+                        }
                         if (0 <= seconds_left && seconds_left <= 60)
                         {
                             LOG_INFO(__func__) << seconds_left << " seconds left for session " << session.id << " '" << username << "'";
