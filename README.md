@@ -11,9 +11,11 @@ The project can also be built with older versions of VS after tuning the propert
 
 1. Copy `_props\user\_Platform.props.IN` to `_props\user\_Platform.props`
 2. Adjust `PlatformToolset` to specify available/desired toolset:  
+     ```
      <PropertyGroup Label="Configuration">  
        <PlatformToolset>v141</PlatformToolset> <!-- VS2017 -->  
      </PropertyGroup>
+     ```
 3. Make a symbolic link (or just make a copy) `packages\log4cpp.1.1.3.1\lib\native\v141` as a duplicate of `log4cpp.1.1.3.1\lib\native\v142`
 
 ## Installation
