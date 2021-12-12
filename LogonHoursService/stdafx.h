@@ -12,7 +12,6 @@
 #include <windows.h>
 
 #include <LM.h>                         // NetUserGetInfo(), etc.
-//#include <ntsecapi.h>                   // LsaEnumerateLogonSessions(), etc. (desktop only)
 #include <tchar.h>
 #include <winsvc.h>
 #include <WtsApi32.h>                   // WTSEnumerateSessions(), etc.

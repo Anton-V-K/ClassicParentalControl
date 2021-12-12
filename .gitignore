@@ -35,3 +35,5 @@
 /.vs
 /_out
 /packages
+/_crashes
+/_releases

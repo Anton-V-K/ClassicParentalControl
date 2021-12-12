@@ -5,7 +5,6 @@
 #include "WorkerThread.h"
 
 #pragma comment(lib, "Netapi32.lib")                // NetUserGetInfo(), etc.
-//#pragma comment(lib, "Secur32.lib")                 // LsaEnumerateLogonSessions(), etc.
 #pragma comment(lib, "Wtsapi32.lib")                // WTSEnumerateSessions(), etc.
 
 WorkerData              g_WorkerData;
@@ -175,33 +174,9 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
         }
         LOG_DEBUG(__func__) << sessions.size() << " active session(s) detected";
 
-#if 0
-        ULONG SessionsCount;
-        PLUID SessionsList;
-        const NTSTATUS status = LsaEnumerateLogonSessions(&SessionsCount, &SessionsList);
-        if (status == 0) // SCESTATUS_SUCCESS // STATUS_SUCCESS | 
-        {
-            std::set<std::wstring> users;
-            for (ULONG i = 0; i < SessionsCount; ++i)
-            {
-                PSECURITY_LOGON_SESSION_DATA pSessionData;
-                if (LsaGetLogonSessionData(&SessionsList[i], &pSessionData) == 0) // STATUS_SUCCESS
-                {
-                    if (Interactive == pSessionData->LogonType)
-                    {
-                        users.insert(pSessionData->UserName.Buffer);
-                    }
-                    LsaFreeReturnBuffer(pSessionData);
-                }
-            }
-
-            for (const auto username: users)
-            {
-#else
         for (const auto session: sessions)
         {
             const auto& wusername = session.user;
-#endif
             
                 LPBYTE bufptr;
                 // Refer to https://docs.microsoft.com/en-us/windows/win32/api/lmaccess/nf-lmaccess-netusergetinfo
@@ -270,12 +245,7 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
                 {
 
                 }
-#if 0
-            }
-            LsaFreeReturnBuffer(SessionsList);
-#else
         }
-#endif
     }
 
     LOG_DEBUG(__func__) << "Exit";
