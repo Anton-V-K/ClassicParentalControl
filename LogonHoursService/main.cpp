@@ -91,13 +91,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     }
 
     const log4cpp::AppenderSet& set = root.getAllAppenders();
-    if (set.empty())            // if no appenders are specifiec in the config file ...
+    if (set.empty())            // if no appenders are specified in the config file ...
     {
         char log_path[MAX_PATH];
         ExpandEnvironmentStringsA("%TEMP%\\" SERVICE_NAME ".log", log_path, _countof(log_path));
 #if 1
-        if (log4cpp::Appender* const appender = new log4cpp::RollingFileAppender("logfile", log_path))
+        if (log4cpp::Appender* const appender = new log4cpp::DailyRollingFileAppender("logfile", log_path, 14))
 #else
+        if (log4cpp::Appender* const appender = new log4cpp::RollingFileAppender("logfile", log_path, 10*1024*1024, 10))
+//#else
         if (log4cpp::Appender* const appender = new log4cpp::FileAppender("logfile", log_path))
 #endif
         {
