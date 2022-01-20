@@ -29,10 +29,27 @@ The project can also be built with older versions of VS after tuning the propert
 3. As Administrator install the service by executing `LogonHoursService --install`.
 4. Start the service manually.
 5. Try setting time restrictions for a local user profile with a command like `net user USERNAME /time:M,12-13`.
-6. Check whether the session of `USERNAME` is locked when the specified time is over (take a look into the service log in `C:\Windows\Temp\LogonHoursService.log`)
-7. You can enable verbose logging by placing a file with name `LogonHoursService.exe.log4cpp` (into the directory with the executable) with the content like:  
-   `log4cpp.rootCategory=DEBUG`
-8. If everything works as expected, enable autostart for the service.
+6. Check whether the session of `USERNAME` is locked when the specified time is over (take a look into the service log in `%windir%\Temp\LogonHoursService.log`)
+7. If everything works as expected, enable autostart for the service.
+
+## Troubleshooting
+
+### Enable verbose logging
+
+You can enable verbose logging by placing a file with name `LogonHoursService.exe.log4cpp` (into the directory with the executable) with the content like:  
+`log4cpp.rootCategory=DEBUG`
+
+The application writes its log into `%TEMP%\LogonHoursService.log` (`%TEMP%` is `%windir%\Temp` for `Local System` account).
+
+### Enable Local Dumps creation
+
+Dump files (`.dmp`) are very useful when you need to investigate an occasional crash.
+
+Add registry key `HKLM\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps` (refer to the article [Collecting User-Mode Dumps](https://docs.microsoft.com/en-us/windows/win32/wer/collecting-user-mode-dumps) for more details).
+
+After local dumps are enabled, you will be able to find the dump under `%LOCALAPPDATA%\CrashDumps` next time the crash happens.
+
+If you're running the service under `Local System` account, its dumps are generated under `%windir%\System32\config\systemprofile\AppData\Local\CrashDumps` or `%windir%\SysWOW64\config\systemprofile\AppData\Local\CrashDumps` (for 32-bit services on 64-bit system)
 
 ## Supported Windows versions
 
@@ -44,6 +61,10 @@ Though the built-in classic parental control is available in Windows 7/8.1, you 
 ![The program can't start because api-ms-win-crt-runtime-l1-1-0.dll is missing from your computer](doc/Windows8.1-api-ms-win-crt-runtime-l1-1-0.dll_is_missing.png)
 
 ## History
+
+### 1.0.2 Alpha (20.01.2022)
+
+- [x] Fixed stack overflow caused by T2A/USES_CONVERSION macro
 
 ### 1.0.1 Alpha (10.12.2021)
 
