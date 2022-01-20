@@ -7,6 +7,25 @@
 #pragma comment(lib, "Netapi32.lib")                // NetUserGetInfo(), etc.
 #pragma comment(lib, "Wtsapi32.lib")                // WTSEnumerateSessions(), etc.
 
+// Converts wide string to multibyte string, allocating memory for new string
+LPSTR W2A(LPCWSTR lpwszStrIn)
+{
+    if (!lpwszStrIn)
+        return NULL;
+    const size_t nInputStrLen = wcslen(lpwszStrIn);
+
+    // Double NULL termination
+    const int nOutputStrLen = WideCharToMultiByte(CP_ACP, 0, lpwszStrIn, nInputStrLen, NULL, 0, 0, 0) + 2;
+    const LPSTR pszOut = new char[nOutputStrLen];
+
+    if (pszOut)
+    {
+        memset(pszOut, 0x00, nOutputStrLen);
+        WideCharToMultiByte(CP_ACP, 0, lpwszStrIn, nInputStrLen, pszOut, nOutputStrLen, 0, 0);
+    }
+    return pszOut;
+}
+
 WorkerData              g_WorkerData;
 
 enum EDayOfWeek
@@ -123,8 +142,6 @@ WorkerData::WorkerData()
 
 DWORD WINAPI WorkerThread(LPVOID lpData)
 {
-    USES_CONVERSION;
-
     LOG_DEBUG(__func__) << "Entry";
 
     WorkerData* const pData = reinterpret_cast<WorkerData*>(lpData);
@@ -152,20 +169,24 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
                 const auto session_id = pSessionInfo[i].SessionId;
                 LPWSTR pBuffer;
                 DWORD bytes;
+                LOG_DEBUG(__func__) << "Starting WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, " << session_id  << ", WTSConnectState, ...)";
                 if (!WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session_id, WTSConnectState, &pBuffer, &bytes))
                     continue;
                 const WTS_CONNECTSTATE_CLASS session_state = *reinterpret_cast<WTS_CONNECTSTATE_CLASS*>(pBuffer);
                 WTSFreeMemory(pBuffer);
                 if (session_state != WTSActive)
                     continue;
+                LOG_DEBUG(__func__) << "Starting WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, " << session_id << ", WTSUserName, ...)";
                 if (WTSQuerySessionInformation(WTS_CURRENT_SERVER_HANDLE, session_id, WTSUserName, &pBuffer, &bytes))
                 {
                     if (wcslen(pBuffer))
                     {
-                        const std::wstring username(pBuffer);
+                        const std::wstring wusername(pBuffer);
+                        const std::unique_ptr<char[]> username(W2A(wusername.c_str()));
                         LOG_DEBUG(__func__) << "WTSQuerySessionInformation: active session " << session_id
-                            << ", user '" << T2A(username.c_str()) << '\'';
-                        sessions.push_back({ session_id, username });
+                            << " '" << username.get() << '\''
+                            ;
+                        sessions.push_back({ session_id, wusername });
                     }
                     WTSFreeMemory(pBuffer);
                 }
@@ -187,9 +208,10 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
                     const LogonHours hours(userinfo2->usri2_logon_hours);
                     NetApiBufferFree(bufptr);
 
-                    const char* const username = T2A(session.user.c_str());
                     if (!hours.All())
                     {
+                        const std::unique_ptr<char[]> username(W2A(wusername.c_str()));
+
                         LOG_DEBUG(__func__) << "checking logon hours for session " << session.id << " '" << username << "'";
 
                         SYSTEMTIME systime; GetSystemTime(&systime); // UTC/GMT

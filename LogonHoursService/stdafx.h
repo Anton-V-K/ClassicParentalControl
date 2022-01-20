@@ -19,8 +19,6 @@
 //#include <iostream>
 #include <string>
 
-#include <AtlConv.h>                    // T2A() and other string convesions macros
-
 //#include <log4cpp/Appender.hh>
 #include <log4cpp/Category.hh>
 #include <log4cpp/FileAppender.hh>
