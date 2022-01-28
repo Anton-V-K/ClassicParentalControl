@@ -61,6 +61,11 @@ Though the built-in classic parental control is available in Windows 7/8.1, you 
 
 ## History
 
+### 1.0.3 Alpha (28.01.2022)
+
+- [x] `DailyRollingFileAppender` is used instead of `RollingFileAppender`
+- [x] log4cpp package upgrade from `1.1.3.1` to `1.1.3.3`
+
 ### 1.0.2 Alpha (20.01.2022)
 
 - [x] Fixed stack overflow caused by T2A/USES_CONVERSION macro
