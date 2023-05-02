@@ -6,6 +6,13 @@
     <!-- Unicode charset may cause problems in old zlib (before 1.2.11) -->
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>

@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <Common/LogonHours.h>
+
 #include "config.h"
 #include "Logger.h"
 #include "WorkerThread.h"
@@ -27,98 +29,6 @@ LPSTR W2A(LPCWSTR lpwszStrIn)
 }
 
 WorkerData              g_WorkerData;
-
-enum EDayOfWeek
-{
-    Sun, Mon, Tue, Wed, Thu, Fri, Sat,
-    FIRST = Sun,
-    LAST = Sat,
-};
-EDayOfWeek& operator ++(EDayOfWeek& day)
-{
-    if (day < EDayOfWeek::LAST)
-    {
-        int value = static_cast<int>(day);
-        day = static_cast<EDayOfWeek>(++value);
-        return day;
-    }
-    LOG_ERROR(__func__) << "Cannot increment " << int(day);
-    return day;
-}
-
-class LogonHours
-{
-public:
-    LogonHours(PBYTE usri2_logon_hours)
-    {
-        Init(usri2_logon_hours);
-    }
-    void Init(PBYTE usri2_logon_hours)
-    {
-        m_all = true;
-        int day     = Sun;
-        int hour    = 0;    // 0:00
-        for (int p = 0; p < 21; ++p)
-        {
-            const BYTE chunk = usri2_logon_hours[p];
-            BYTE mask = 0b00000001;
-            for (int bit = 0; bit < 8; ++bit)
-            {
-                m_data[day][hour] = (chunk & mask) != 0;
-                if (!m_data[day][hour])
-                    m_all = false;
-                ++hour;
-                mask <<= 1;
-                if (hour >= 24)
-                {
-                    ++day;
-                    hour = 0;
-                }
-            }
-        }
-    }
-
-    bool All() const { return m_all; }
-    bool Allowed(EDayOfWeek day, WORD hour) const
-    {
-        if (Sun <= day && day <= Sat && 0 <= hour && hour <= 23)
-            return m_data[day][hour];
-        return false;
-    }
-    // @return seconds left (for the given time) until the allowed logon period expires, or -1 if no restrictions are set
-    // @note 0 (zero) is returned if logon isn't allowed during given time
-    long SecondsLeft(EDayOfWeek day, WORD hour, WORD minute, WORD second) const
-    {
-        if (All())
-            return -1;
-        if (!Allowed(day, hour))
-            return 0;
-        long left = (60 - second - 1) + 60 * (60 - minute - 1); // the rest of current hour is allowed
-        WORD hour_start = hour + 1;                     // for the current day - start with the next hour
-        EDayOfWeek d    = day;
-        for (int i = 0; i < 7; ++i)                     // we'll check all week days starting from the current one
-        {
-            for (WORD h = hour_start; h < 24; ++h)      // check hours until end of day
-            {
-                if (Allowed(day, h))
-                    left += 3600;
-                else
-                    return left;
-            }
-            hour_start = 0;                             // for the rest of days
-            // next day
-            if (d == EDayOfWeek::LAST)
-                d = EDayOfWeek::FIRST;
-            else
-                ++d;
-        }
-        return left;
-    }
-
-private:
-    bool m_all;             // true if no logon restrictions
-    bool m_data[7][24];
-};
 
 void seconds2time(long seconds, long* days, WORD* hours, WORD* mins, WORD* secs)
 {
@@ -199,15 +109,9 @@ DWORD WINAPI WorkerThread(LPVOID lpData)
         {
             const auto& wusername = session.user;
             
-                LPBYTE bufptr;
-                // Refer to https://docs.microsoft.com/en-us/windows/win32/api/lmaccess/nf-lmaccess-netusergetinfo
-                const NET_API_STATUS result = NetUserGetInfo(NULL, wusername.c_str(), 2, &bufptr);
-                if (result == NERR_Success)
+            LogonHours hours;
+            if (hours.InitFrom(wusername.c_str()))
                 {
-                    const USER_INFO_2* const userinfo2 = reinterpret_cast<USER_INFO_2*>(bufptr);
-                    const LogonHours hours(userinfo2->usri2_logon_hours);
-                    NetApiBufferFree(bufptr);
-
                     if (!hours.All())
                     {
                         const std::unique_ptr<char[]> username(W2A(wusername.c_str()));
