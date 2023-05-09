@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="_User.props" Condition="exists('_User.props')" />
+
   <PropertyGroup Label="Configuration">
     <!-- MultiByte charset isn't supported -->
     <!-- Unicode charset may cause problems in old zlib (before 1.2.11) -->
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)'=='Debug'">
+    <EnableASAN>true</EnableASAN>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -24,6 +29,7 @@
       <!-- <SmallerTypeCheck>true</SmallerTypeCheck> --><!-- C2338: /RTCc rejects conformant code, so it isn't supported by the C++ Standard Library -->
     </ClCompile>
   </ItemDefinitionGroup>
+
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

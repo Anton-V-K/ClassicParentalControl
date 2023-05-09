@@ -33,6 +33,9 @@
     <ClInclude Include="WinDataExchangeEx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UIEx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WinMain.cpp">

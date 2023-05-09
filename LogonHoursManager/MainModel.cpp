@@ -46,6 +46,35 @@ std::vector<std::wstring> MainModel::getUsers() const
     return users;
 }
 
+bool MainModel::isElevated() const
+{
+    static bool init_ok{ false };
+    static TOKEN_ELEVATION_TYPE type;
+    if (!init_ok)
+    {
+        init_ok = true;
+        HANDLE hProcess;
+        if (OpenProcessToken(GetCurrentProcess(), TOKEN_READ, &hProcess))
+        {
+            DWORD size;
+            if (GetTokenInformation(hProcess, TokenElevationType, &type, sizeof(type), &size))
+            {
+                if (size == sizeof(type))
+                {
+                    LOG_DEBUG(__func__) << "GetTokenInformation: TOKEN_ELEVATION_TYPE = " << int(type);
+                }
+            }
+            else
+                LOG_ERROR(__func__) << "GetTokenInformation(..., TokenElevationType, ...) failed with error " << GetLastError();
+            CloseHandle(hProcess);
+        }
+        else
+            LOG_ERROR(__func__) << "OpenProcessToken(GetCurrentProcess(), TOKEN_READ, ...) failed with error " << GetLastError();
+    }
+
+    return type == TokenElevationTypeFull;
+}
+
 void MainModel::selectUser(const wchar_t* user)
 {
     if (user)

@@ -14,6 +14,8 @@ public:
     const wchar_t* getUser() const;
     std::vector<std::wstring> getUsers() const;
 
+    bool isElevated() const;
+
     void selectUser(const wchar_t* user);
 
 protected:

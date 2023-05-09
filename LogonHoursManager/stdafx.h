@@ -12,6 +12,8 @@
 #include <Windows.h>
 
 #include <LM.h>                         // NetUserGetInfo(), etc.
+#include <ShlObj.h>                     // IsUserAnAdmin(), etc.
+#include <tchar.h>
 
 // C RunTime Header Files
 #include <malloc.h>
@@ -34,6 +36,11 @@ extern CAppModule _Module;
 #include <atlddx.h>
 #include <atlframe.h>                   // CUpdateUI
 #include <atlwin.h>
+
+#include <log4cpp/DailyRollingFileAppender.hh>
+#include <log4cpp/PatternLayout.hh>
+#include <log4cpp/PropertyConfigurator.hh>
+#include <log4cpp/Win32DebugAppender.hh>
 
 #include <Common/Logger.h>
 

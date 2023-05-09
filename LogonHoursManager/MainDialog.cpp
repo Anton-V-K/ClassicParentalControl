@@ -14,6 +14,23 @@ CMainDialog::~CMainDialog()
 
 LRESULT CMainDialog::OnClose(UINT, int, HWND)
 {
+    if (m_week_modified)
+    {
+        TCHAR message[1024];
+        _stprintf_s(message, _T("Allowed Logon Hours for the user '%s' were modified.\nDo you want to apply the changes?"), m_userName);
+        const auto answer = MessageBox(message, _T("Confirm the changes"), MB_ICONQUESTION | MB_YESNOCANCEL);
+        switch (answer)
+        {
+        case IDCANCEL:
+            return 0;
+        case IDYES:
+            ApplyChanges(true);
+            break;
+        case IDNO:
+            // discard changes
+            break;
+        }
+    }
     EndDialog(0);
     return 0;
 }
@@ -26,6 +43,12 @@ LRESULT CMainDialog::OnInitDialog(HWND, LPARAM)
 {
     HICON hIcon = ::LoadIcon(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDI_APP));
     SetIcon(hIcon);
+
+    if (!m_model.isElevated())
+    {
+        SetDlgItemText(IDOK, _T("Restart"));
+        SendDlgItemMessage(IDOK, BCM_SETSHIELD, 0, TRUE);
+    }
 
     m_ctrlToolTip.Create(m_hWnd); // , rcDefault, NULL, WS_POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS_EX_TOPMOST);
     ATLASSERT(m_ctrlToolTip.IsWindow());
@@ -111,40 +134,100 @@ LRESULT CMainDialog::OnInitDialog(HWND, LPARAM)
 
     FetchData();
 
-    DoDataExchange(DDX_LOAD);
-
     UIAddChildWindowContainer(m_hWnd);
     UpdateUI(true);
 
     return 0;
 }
-/*DEL?
+
+LRESULT CMainDialog::OnOK(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& bHandled)
+{
+    if (m_model.isElevated())
+    {
+        ApplyChanges(false);
+    }
+    else
+    {
+        // TODO move to another class?
+
+        TCHAR filepath[MAX_PATH];
+        GetModuleFileName(NULL, filepath, sizeof(filepath));
+
+        TCHAR curdir[MAX_PATH];
+        GetCurrentDirectory(_countof(curdir), curdir);
+
+        SHELLEXECUTEINFO shex = { 0 };
+
+        shex.cbSize = sizeof(shex);
+        shex.fMask  = SEE_MASK_UNICODE | SEE_MASK_NOZONECHECKS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NOASYNC;
+        shex.lpVerb = L"runas";
+        shex.nShow  = SW_SHOW;
+        shex.lpFile = filepath;
+        // TODO pass currently selected user
+        shex.lpParameters   = GetCommandLine();
+        shex.lpDirectory    = curdir;
+
+        if (ShellExecuteEx(&shex))
+        {
+            EndDialog(0);
+        }
+        else
+            LOG_ERROR(__func__) << "ShellExecuteEx() failed with error " << GetLastError();
+    }
+    // bHandled = TRUE;
+    return 0;
+}
+
 LRESULT CMainDialog::OnHourChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     if (wNotifyCode == BN_CLICKED)
     {
-        // UpdateData();
-        // DisplayGUID();
-        if (IDC_HOURS_FIRST <= wID && wID <= IDC_HOURS_LAST)
+        if (m_model.isElevated())
         {
-            const auto span = wID - IDC_HOURS_FIRST;
-            const auto day = span / 24;
-            const auto hour = span % 24;
-            const auto check = Button_GetCheck(hWndCtl);
-            m_model.getHours().Allow(EDayOfWeek(day), hour, check == BST_CHECKED);
-            // TODO m_model.getHours().ApplyTo(m_model.getUser());
+            m_week_modified = true;
+            UpdateUI();
+        }
+        else
+        {
+            bHandled = FALSE;
+
         }
     }
     return 0;
 }
-*/
+
 LRESULT CMainDialog::OnUserChanged(UINT, int, HWND)
 {
+    if (m_week_modified)
+    {
+        TCHAR message[1024];
+        _stprintf_s(message, _T("Allowed Logon Hours for the user '%s' were modified.\nDo you want to apply the changes?"), m_userName);
+        if (MessageBox(message, _T("Confirm the changes"), MB_ICONQUESTION | MB_YESNO) == IDYES)
+        {
+            ApplyChanges(true);
+        }
+    }
     UpdateUI();
     m_model.selectUser(m_userName);
     FetchData();
-    DoDataExchange(DDX_LOAD);
+    UpdateUI(true);
     return 0;
+}
+
+void CMainDialog::ApplyChanges(bool prev_user)
+{
+    const std::wstring userName = prev_user ? m_userName : L""; // m_userName will be changed during DDX
+    DoDataExchange(DDX_SAVE);
+    m_model.getHours().Set(m_week, false);
+    if (m_model.getHours().ApplyTo(userName.empty() ? m_userName : userName.c_str()))
+    {
+        m_week_modified = false;
+    }
+    else
+    {
+        MessageBox(_T("Cannot apply these changes!"), _T("Error"), MB_ICONERROR | MB_OK);
+    }
+    UpdateUI(false);
 }
 
 void CMainDialog::FetchData()
@@ -152,6 +235,8 @@ void CMainDialog::FetchData()
     wcscpy_s(m_userName, m_model.getUser());
     m_users = m_model.getUsers();
     m_model.getHours().Get(m_week, false);
+    m_week_modified = false;
+    DoDataExchange(DDX_LOAD);
 }
 
 void CMainDialog::UpdateUI(bool saved)
@@ -159,26 +244,15 @@ void CMainDialog::UpdateUI(bool saved)
     const auto isValid = saved || DoDataExchange(DDX_SAVE);
 
     for (UINT id = IDC_HOURS_FIRST; id <= IDC_HOURS_LAST; ++id)
-        UIEnable(id, isValid && m_userName[0] != 0);
+        UIEnable(id, isValid && m_userName[0] != 0 && m_model.isElevated());
 
     if (isValid)
     {
-
-/*DEL
-        UIEnable(IDC_EXP, TRUE);
-        UIEnable(IDC_LN, m_number > 0);
-        UIEnable(IDC_SQRT, m_number >= 0);
-        UIEnable(IDC_FACT, m_number <= 100 && m_number > 0 && ((double)(unsigned long)m_number == m_number));
-*/
+        UIEnable(IDOK, !m_model.isElevated() || m_week_modified);
     }
     else
     {
-/*DEL
-        UIEnable(IDC_EXP, FALSE);
-        UIEnable(IDC_LN, FALSE);
-        UIEnable(IDC_SQRT, FALSE);
-        UIEnable(IDC_FACT, FALSE);
-*/
+        UIEnable(IDOK, FALSE);
     }
 
     UIUpdateChildWindows();

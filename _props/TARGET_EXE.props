@@ -4,4 +4,5 @@
   <Import Project="Cxx.props" />
   <Import Project="General_Directories.props" />
   <Import Project="Linker.props" />
+  <Import Project="RC.props" />
 </Project>

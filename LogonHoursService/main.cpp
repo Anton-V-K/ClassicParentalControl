@@ -6,10 +6,6 @@
 #include "ServiceManager.h"
 #include "WorkerThread.h"
 
-#include "version.h"
-
-#pragma comment(lib, "ws2_32.lib")                      // Needed for log4cpp if PropertyConfigurator is used
-
 void Main()
 {
     LOG_DEBUG(__func__) << "Entry";
@@ -56,91 +52,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 {
     OutputDebugString(_T(SERVICE_NAME) _T(": Start\n"));
 
-    log4cpp::Category& root = log4cpp::Category::getRoot();
-
-    ////////////////////////////////////////
-    // Configigure log4cpp
-    ////////////////////////////////////////
-    char config_path[_MAX_PATH] = { 0 };
-    GetModuleFileNameA(NULL, config_path, _countof(config_path));
-    strcat_s(config_path, ".log4cpp");
-    try
-    {
-        log4cpp::PropertyConfigurator::configure(config_path);
-    }
-    catch (const log4cpp::ConfigureFailure& /*ex*/)
-    {
-        config_path[0] = 0;
-/*
-#ifdef _CONSOLE
-        std::cerr
-            << ex.what()
-            << " [log4cpp::ConfigureFailure catched] while reading "
-            << file_log4cpp_init
-            << std::endl;
-#endif
-*/
-
-        // Default configuration for log4cpp
-#ifdef _DEBUG
-        root.setPriority(log4cpp::Priority::DEBUG);
-#else
-        root.setPriority(log4cpp::Priority::INFO);
-#endif
-
-    }
-
-    const log4cpp::AppenderSet& set = root.getAllAppenders();
-    if (set.empty())            // if no appenders are specified in the config file ...
-    {
-        char log_path[MAX_PATH];
-        ExpandEnvironmentStringsA("%TEMP%\\" SERVICE_NAME ".log", log_path, _countof(log_path));
-#if 1
-        if (log4cpp::Appender* const appender = new log4cpp::DailyRollingFileAppender("logfile", log_path, 14))
-#else
-        if (log4cpp::Appender* const appender = new log4cpp::RollingFileAppender("logfile", log_path, 10*1024*1024, 10))
-//#else
-        if (log4cpp::Appender* const appender = new log4cpp::FileAppender("logfile", log_path))
-#endif
-        {
-            log4cpp::PatternLayout* const layout = new log4cpp::PatternLayout();
-            // Refer to http://www.cplusplus.com/reference/ctime/strftime/ for format specification
-            layout->setConversionPattern("%d{%Y.%m.%d %H:%M:%S,%l} [%p] [%t] %c: %m%n");
-            appender->setLayout(layout);
-            root.addAppender(appender);
-        }
-        if (log4cpp::Appender* const appender = new log4cpp::Win32DebugAppender("debugger"))
-        {
-            log4cpp::PatternLayout* const layout = new log4cpp::PatternLayout();
-            // Refer to http://www.cplusplus.com/reference/ctime/strftime/ for format specification
-            layout->setConversionPattern("%d{%H:%M:%S,%l} [%p] [%t] %c: %m%n");
-            appender->setLayout(layout);
-            root.addAppender(appender);
-        }
-    }
-
-    LOG_INFO(__func__) << "========================================";
-    LOG_INFO(__func__) << "Log initialized successfully";
-    if (*config_path)
-        LOG_INFO(__func__) << "Loaded " << config_path;
-
-#ifndef _CONSOLE
-    LOG_INFO(__func__) << "Length of command line: " << _tcslen(lpCmdLine);
-#endif
-
-    LOG_INFO(__func__) << "Version: " << VERSION_STRING;
-    LOG_INFO(__func__) << "Build  : " << __DATE__ << ' ' << __TIME__;
-#if defined(_MSC_FULL_VER)
-    LOG_INFO(__func__) << "_MSC_FULL_VER: "
-        << _MSC_FULL_VER / 10000000 << '.'
-        << (_MSC_FULL_VER % 10000000) / 100000 << '.'
-        << _MSC_FULL_VER % 100000;
-#elif defined(_MSC_VER)
-    LOG_INFO(__func__) << "_MSC_VER: "
-        << _MSC_VER / 100 << '.'
-        << _MSC_VER % 100;
-#endif
-
+    LogMain(SERVICE_NAME);
 
 #ifdef _CONSOLE
     if (argc > 1)

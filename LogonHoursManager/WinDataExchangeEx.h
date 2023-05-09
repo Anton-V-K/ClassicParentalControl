@@ -98,7 +98,7 @@ public:
 };
 
 #define DDX_CHECK_ARRAY(nFirstID, nLastID, arr) \
-        static_assert(_countof(arr) == nLastID - nFirstID, "The elements range should match the array's size"); \
+        static_assert(_countof(arr) == nLastID - nFirstID + 1, "The elements range should match the array's size"); \
         if (nFirstID <= nCtlID && nCtlID <= nLastID) \
             DDX_Check(nCtlID, arr[nCtlID - nFirstID], bSaveAndValidate); \
         if (nCtlID == (UINT)-1) \

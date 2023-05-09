@@ -14,10 +14,14 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)Logger.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)LogonHours.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)Logger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)LogonHours.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)REPEAT.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)version.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)WeekHours.h" />
   </ItemGroup>
 </Project>

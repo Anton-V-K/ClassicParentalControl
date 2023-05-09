@@ -65,7 +65,10 @@ bool LogonHours::ApplyTo(const wchar_t* username) const
     info.usri1020_units_per_week = UNITS_PER_WEEK; // NetUserAdd and NetUserSetInfo functions ignore this member
     info.usri1020_logon_hours = usri2_logon_hours;
     if (NetUserSetInfo(NULL, username, 1020, reinterpret_cast<BYTE*>(&info), &parm_err) != NERR_Success)
+    {
+        LOG_ERROR(__func__) << "NetUserSetInfo() failed with error " << GetLastError();
         return false;
+    }
     return true;
 }
 

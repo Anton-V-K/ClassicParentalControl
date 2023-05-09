@@ -49,3 +49,5 @@ inline log4cpp::Category& Logger(const void* p = NULL)
 {
     return log4cpp::Category::getRoot();
 }
+
+void LogMain(const char* appname = nullptr);
