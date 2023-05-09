@@ -37,3 +37,6 @@
 /packages
 /_crashes
 /_releases
+
+*.aps
+*.vcxproj.user

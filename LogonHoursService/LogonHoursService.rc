@@ -10,7 +10,7 @@
 #include <winres.h>
 
 #include "config.h"
-#include "version.h"
+#include "Common/version.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -37,7 +37,7 @@ BEGIN
     "#include <winres.h>\r\n"
     "\r\n"
     "#include ""config.h""\r\n"
-    "#include ""version.h""\r\n"
+    "#include ""Common/version.h""\r\n"
     "\0"
 END
 
