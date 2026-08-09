@@ -45,12 +45,15 @@ public:
         IDC_HOURS_FIRST = IDC_GROUP_HOURS + 1,
         IDC_HOURS_LAST  = IDC_HOURS_FIRST + 7 * 24 - 1,
         IDC_HOURS_COUNT = IDC_HOURS_LAST - IDC_HOURS_FIRST,
+        IDC_HOUR_HEADER_FIRST = IDC_HOURS_LAST + 1,
+        IDC_HOUR_HEADER_LAST  = IDC_HOUR_HEADER_FIRST + 23,
     };
 
     BEGIN_MSG_MAP(Self)
         MSG_WM_INITDIALOG(OnInitDialog)
         COMMAND_ID_HANDLER(IDOK, OnOK)
         COMMAND_RANGE_HANDLER(IDC_HOURS_FIRST, IDC_HOURS_LAST, OnHourChanged)
+        COMMAND_RANGE_HANDLER(IDC_HOUR_HEADER_FIRST, IDC_HOUR_HEADER_LAST, OnHourHeaderClicked)
         COMMAND_HANDLER_EX(IDC_COMBO_USER, CBN_SELENDOK, OnUserChanged)
         COMMAND_HANDLER_EX(IDCANCEL, BN_CLICKED, OnClose)
     END_MSG_MAP()
@@ -84,6 +87,8 @@ private:
     LRESULT OnOK(WORD /*wNotifyCode*/, WORD wID, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
     LRESULT OnHourChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+
+    LRESULT OnHourHeaderClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
     LRESULT OnUserChanged(UINT, int, HWND);
 
