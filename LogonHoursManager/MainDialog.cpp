@@ -77,8 +77,8 @@ LRESULT CMainDialog::OnInitDialog(HWND, LPARAM)
         {
             wchar_t header[12];
             swprintf_s(header, L"%02d", hour);
-            const auto hwndLabel = CreateWindow(_T("Static"), header, WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE | SS_LEFT,
-                x, y, width, height, m_hWnd, HMENU(IDC_STATIC), NULL, NULL);
+            const auto hwndLabel = CreateWindow(_T("Static"), header, WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE | SS_LEFT | SS_NOTIFY,
+                x, y, width, height, m_hWnd, HMENU(IDC_HOUR_HEADER_FIRST + hour), NULL, NULL);
             SendMessage(hwndLabel, WM_SETFONT, WPARAM(GetFont()), 0);
         }
     }
@@ -176,6 +176,35 @@ LRESULT CMainDialog::OnHourChanged(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
         {
             bHandled = FALSE;
 
+        }
+    }
+    return 0;
+}
+
+LRESULT CMainDialog::OnHourHeaderClicked(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    if (wNotifyCode == STN_CLICKED)
+    {
+        if (m_model.isElevated())
+        {
+            const int hour = wID - IDC_HOUR_HEADER_FIRST;
+            if (0 <= hour && hour < 24)
+            {
+                const UINT firstId = IDC_HOURS_FIRST + hour;
+                const bool currentState = IsDlgButtonChecked(firstId);
+                const bool newState = !currentState;
+
+                for (int day = 0; day < 7; ++day)
+                {
+                    CheckDlgButton(firstId + day * 24, newState ? BST_CHECKED : BST_UNCHECKED);
+                }
+                m_week_modified = true;
+                UpdateUI();
+            }
+        }
+        else
+        {
+            bHandled = FALSE;
         }
     }
     return 0;
